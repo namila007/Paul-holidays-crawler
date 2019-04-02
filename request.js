@@ -42,9 +42,9 @@ const csvWriter = createCsvWriter({
   ]
 });
 var data = [];
-
-const start = 1437;
-const end = 2500;
+var count = 0;
+const start = 1132;
+const end = 1242;
 
 function getUrl(ID) {
   return `https://www.michaelpaulholidays.co.uk/find/results?location=dorset&filters%5B%5D=&nights=0&adults=1&children=0&uri=%2Ffind%2Fproperties%2Fdorset%2F0-nights%2F1-adults%2F0-children%2Flodges-and-cottages-and-caravans&propertyId=${ID}&resortId=0&apiId=6&idsOnly=false&minBedroomsNumber=0&maxBedroomsNumber=1000`
@@ -78,19 +78,40 @@ async function fetchInParallel(start, end) {
 
     if (err != null) console.log(err)
     else {
+      count = await add(count)
       const ev = getElement(body)
       console.log('Searching', i);
       if (ev.id){
         console.log('Added', ev.id);
         data.push(ev)
       }
-      if(data.length>20) {
-        await writeToCSV(data);
-        data=[];
+      if(data.length>10) {
+        await writeToCSV(data).then(console.log("Written to the file"));
+        data=[];  
+      }
+      if(count==100) {
+        //sleep
+        console.log("count reached 100, sleeping for 5 second")
+        count = await reset();
+        await sleep(5000);
+        console.log("awaken, Running again")
       }
     }
   }
-  await writeToCSV(data)
+  await writeToCSV(data).then(console.log("FINISHED"))
+}
+
+async function add(i){
+  i++;
+  return ( i);
+}
+
+async function reset() {
+  return  0;
+}
+
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function writeToCSV(elems) {
